@@ -11,10 +11,11 @@
 
 4. 安装插件即可使用
 
-> 模板不一样的需要自己改代码，核心逻辑参考 hooks.php 和 verify.tpl
+> 未使用 ajax 和 jquery 的模板或 *非标准模板* 需要自己改代码，核心逻辑参考 hooks.php 和 verify.tpl
 
 ```js
 $('input[id^="captcha_"]').closest('.form-group').empty().html(`<label for="code">行为验证</label>`)
+captchaObj.appendTo($(capGroup))
 ```
 
 ### 成品展示
