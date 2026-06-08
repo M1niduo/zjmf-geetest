@@ -39,8 +39,9 @@ Hook::add('geetest', function () {
             function showCaptcha() {
                 var capGroup = \$('input[id^="captcha_"]').closest('.form-group').empty().html(`<label for="code">行为验证</label>`)
                 const intersectionObserver = new IntersectionObserver((entries) => {
-                    if (entries[0].intersectionRatio <= 0) return;
-                    captchaInstance.appendTo(entries[0].target)
+                    const target = entries.find(e => e.intersectionRatio > 0)
+        			if (!target) return;
+                    captchaInstance.appendTo(target.target)
                 });
                 initGeetest4({
                     captchaId: CAPTCHA_ID,
