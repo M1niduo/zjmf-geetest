@@ -84,32 +84,46 @@ Hook::add('geetest', function () {
 });
 
 Hook::add('custom_captcha_check', function () {
-    $captcha_id = env('geetest_captcha_id', '647f5ed2ed8acb4be36784e01556bb71');
+    $captcha_id  = env('geetest_captcha_id', '647f5ed2ed8acb4be36784e01556bb71');
     $captcha_key = env('geetest_captcha_key', 'b09a7aafbfd83f73b35a9b530d0337bf');
-    $params = json_decode(request()->header('x-geetest-token'), true);
-    if (empty($params))
+
+    // 先取 header，没有则取 param
+    $rawToken = request()->header('x-geetest-token');
+    if (empty($rawToken)) {
+        $rawToken = request()->param('x-geetest-token');
+        // param 中是 encodeURIComponent 编码过的，需要解码
+        if (!empty($rawToken)) {
+            $rawToken = rawurldecode($rawToken);
+        }
+    }
+
+    if (empty($rawToken)) {
         return false;
+    }
+
+    $params = json_decode($rawToken, true);
+    if (empty($params)) {
+        return false;
+    }
+
     try {
         $query = [
-            'lot_number' => $params['lot_number'],
+            'lot_number'     => $params['lot_number'],
             'captcha_output' => $params['captcha_output'],
-            'pass_token' => $params['pass_token'],
-            'gen_time' => $params['gen_time'],
-            'sign_token' => hash_hmac('sha256', $params['lot_number'], $captcha_key)
+            'pass_token'     => $params['pass_token'],
+            'gen_time'       => $params['gen_time'],
+            'sign_token'     => hash_hmac('sha256', $params['lot_number'], $captcha_key),
         ];
+
         $client = new Client(['base_uri' => 'http://gcaptcha4.geetest.com/']);
         $result = Utils::jsonDecode(
-            $client->post(
-                '/validate',
-                [
-                    'query' => [
-                        'captcha_id' => $captcha_id  // 自动拼接到 URL 后
-                    ],
-                    'form_params' => $query  // 其他参数放在 body
-                ]
-            )->getBody(),
+            $client->post('/validate', [
+                'query'       => ['captcha_id' => $captcha_id],
+                'form_params' => $query,
+            ])->getBody(),
             true
         );
+
         return $result['result'] == 'success';
     } catch (\Exception $e) {
         return false;
