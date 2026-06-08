@@ -41,7 +41,9 @@ Hook::add('geetest', function () {
                 const intersectionObserver = new IntersectionObserver((entries) => {
                     const target = entries.find(e => e.intersectionRatio > 0)
         			if (!target) return;
-                    captchaInstance.appendTo(target.target)
+                    captchaInstance.reset()
+        			captchaInstance.target = target.target
+                    captchaInstance.appendTo(captchaInstance.target)
                 });
                 initGeetest4({
                     captchaId: CAPTCHA_ID,
@@ -62,6 +64,7 @@ Hook::add('geetest', function () {
                             captchaObj.reset();
                             return;
                         }
+                        \$(captchaInstance.target).append(`<input type="hidden" name="x-geetest-token" value="${encodeURIComponent(JSON.stringify(result))}">`)
                         \$.ajaxSetup({
                             headers: {
                                 'x-geetest-token': JSON.stringify(result)
